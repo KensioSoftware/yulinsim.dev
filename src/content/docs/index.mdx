@@ -1,0 +1,161 @@
+---
+title: Yulin local AWS simulator
+description: Documentation for using Yulin to simulate AWS services in tests, local development, and CI.
+---
+
+import { Card, CardGrid, LinkCard } from "@astrojs/starlight/components";
+
+Yulin is a local AWS simulator for testing Node.js applications. It simulates AWS system behaviour
+for fast, isolated testing, local development, and CI.
+
+<CardGrid>
+  <LinkCard
+    title="npm"
+    href="https://www.npmjs.com/package/@kensio/yulin"
+    description="@kensio/yulin npm package"
+  />
+  <LinkCard
+    title="GitHub"
+    href="https://github.com/KensioSoftware/yulin"
+    description="KensioSoftware/yulin GitHub repo"
+  />
+</CardGrid>
+
+## Installation
+
+Install Yulin as a development dependency:
+
+```bash
+npm i -D @kensio/yulin
+```
+
+## Why use Yulin?
+
+Yulin runs in the same single process as your tests and application under test. No network,
+containers, or external I/O are involved unless you explicitly choose to serve a simulation on
+localhost.
+
+This isolated system approach makes it practical to test meaningful behaviour across AWS services
+without slow or fragile infrastructure setup.
+
+- Tests run fast because state is in memory.
+- Test setup is simple, with no containers or extra services to manage.
+- Each `SimAws` instance is cheap and encapsulated, so tests can create isolated AWS environments
+  freely.
+- You can combine Yulin with other mocks and simulators, such as `nock`.
+- You can test behaviour across multiple simulated AWS services in one process and step through the
+  whole system in a debugger.
+
+## Direct interaction with simulated AWS
+
+Create a simulated AWS environment and interact with supported services directly:
+
+```typescript
+import { SimAws } from "@kensio/yulin";
+import { CreateTableCommand } from "@aws-sdk/client-dynamodb";
+
+const simAws = new SimAws();
+
+// Default Account and Region.
+await simAws.service("dynamoDb").createTable(
+ new CreateTableCommand({
+   TableName: "FoobarTable",
+   KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
+ }),
+);
+
+// Specify Account.
+await simAws.account("111111111111").service("dynamoDb").createTable({ ... });
+
+// Specify Region.
+await simAws.region("eu-west-2").service("dynamoDb").createTable({ ... });
+
+// Specify Account and Region.
+await simAws.account("111111111111").region("eu-west-2").service("dynamoDb").createTable({ ... });
+```
+
+AWS state is simulated internally, so you can test realistic interactions with multiple AWS
+services.
+
+If you prefer, you can also instantiate simulated services individually:
+
+```typescript
+import { SimS3 } from "@kensio/yulin/s3";
+import { CreateBucketCommand } from "@aws-sdk/client-s3";
+
+const simS3 = new SimS3();
+
+await simS3.createBucket(new CreateBucketCommand({ Bucket: "foo-bucket" }));
+```
+
+That simulated service then has its own isolated state.
+
+You can listen on a port to serve your simulated AWS on localhost:
+
+```typescript
+import { SimAws } from "@kensio/yulin";
+import { serveSimAws } from "@kensio/yulin/serve";
+import {
+  CreateBucketCommand,
+  PutBucketWebsiteCommand,
+  PutObjectCommand,
+} from "@aws-sdk/client-s3";
+
+const simAws = new SimAws();
+const srv = await serveSimAws({ simAws }); // Chooses available port on localhost.
+
+const simS3 = simAws.region("eu-west-2").s3();
+await simS3.createBucket(new CreateBucketCommand({ Bucket: "foo-site" }));
+await simS3.putBucketWebsite(
+  new PutBucketWebsiteCommand({
+    Bucket: "foo-site",
+    WebsiteConfiguration: {
+      IndexDocument: {
+        Suffix: "index.html",
+      },
+    },
+  }),
+);
+await simS3.putObject(
+  new PutObjectCommand({
+    Bucket: "foo-site",
+    Key: "foo/index.html",
+    Body: "<h1>Hello, world!</h1>",
+    Metadata: {
+      "content-type": "text/html; charset=utf-8",
+    },
+  }),
+);
+
+const bucketWebsiteUrl = srv.localUrl(simS3.getBucketWebsiteUrl("foo-site"));
+console.log(bucketWebsiteUrl.toString());
+
+// Fetch /foo/index.html from the simulated S3 bucket website via port on localhost.
+const res = await fetch(new URL("/foo/", bucketWebsiteUrl));
+```
+
+## What’s in a name?
+
+The word yǔlín (雨林) means “rainforest” — a roundabout reference to “Amazon” as in Amazon Web
+Services.
+
+## Service documentation
+
+<CardGrid>
+    <Card title="CloudFormation" icon="seti:aws">
+        Deploy supported CloudFormation templates into simulated AWS resources.
+
+        [Read the CloudFormation docs](/services/cloudformation/)
+    </Card>
+    <Card title="CloudFront" icon="seti:aws">
+        Create simulated CloudFront distributions backed by simulated origins.
+
+        [Read the CloudFront docs](/services/cloudfront/)
+    </Card>
+    <Card title="S3" icon="seti:aws">
+        Create buckets, store objects, configure website hosting, and serve simulated S3 locally.
+
+        [Read the S3 docs](/services/s3/)
+    </Card>
+
+</CardGrid>
