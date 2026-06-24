@@ -2,6 +2,9 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 
+const site = "https://yulinsim.dev";
+const socialImage = `${site}/npm-yulin-aws-simulator.png`;
+
 // https://astro.build/config
 export default defineConfig({
   site: "https://yulinsim.dev",
@@ -16,6 +19,43 @@ export default defineConfig({
         replacesTitle: false,
       },
       favicon: "/favicon.png",
+      head: [
+        {
+          tag: "meta",
+          attrs: {
+            property: "og:image",
+            content: socialImage,
+          },
+        },
+        {
+          tag: "meta",
+          attrs: {
+            property: "og:image:alt",
+            content: "Yulin AWS Simulator",
+          },
+        },
+        {
+          tag: "meta",
+          attrs: {
+            name: "twitter:card",
+            content: "summary_large_image",
+          },
+        },
+        {
+          tag: "meta",
+          attrs: {
+            name: "twitter:image",
+            content: socialImage,
+          },
+        },
+        {
+          tag: "meta",
+          attrs: {
+            name: "twitter:image:alt",
+            content: "Yulin AWS Simulator",
+          },
+        },
+      ],
       social: [
         {
           icon: "npm",
