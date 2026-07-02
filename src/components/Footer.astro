@@ -1,0 +1,33 @@
+---
+// src/components/Footer.astro
+import DefaultFooter from "@astrojs/starlight/components/Footer.astro";
+---
+
+<DefaultFooter />
+
+<p class="developer-link">
+  <a href="https://kensiosoftware.co.uk/"
+     title="Kensio Software - Freelance Software Engineer"
+     target="_blank">
+    Software Engineering by Kensio Software
+  </a>
+</p>
+
+<style>
+  .developer-link {
+    margin: 3rem 0 0;
+    color: var(--sl-color-gray-3);
+    font-size: var(--sl-text-sm);
+    text-align: center;
+  }
+
+  .developer-link a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .developer-link a:hover {
+    color: var(--sl-color-white);
+  }
+</style>

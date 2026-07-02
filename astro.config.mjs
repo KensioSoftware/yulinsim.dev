@@ -19,6 +19,9 @@ export default defineConfig({
         replacesTitle: false,
       },
       favicon: "/favicon.png",
+      components: {
+        Footer: "./src/components/Footer.astro",
+      },
       head: [
         {
           tag: "meta",
