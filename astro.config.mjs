@@ -80,6 +80,7 @@ export default defineConfig({
           label: "Services",
           items: [
             // service-sidebar:start
+                { label: "ACM", slug: "services/acm" },
                 { label: "CloudFormation", slug: "services/cloudformation" },
                 { label: "CloudFront", slug: "services/cloudfront" },
                 { label: "Route53", slug: "services/route53" },
