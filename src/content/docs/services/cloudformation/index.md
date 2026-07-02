@@ -3,8 +3,6 @@ title: Simulated CloudFormation
 description: Deploy supported CloudFormation templates into simulated AWS resources with Yulin.
 ---
 
-# Simulated CloudFormation
-
 Yulin includes a simulated CloudFormation service for isolated tests, local development, and CI.
 
 Sim CloudFormation creates supported simulated AWS resources from CloudFormation templates. It can

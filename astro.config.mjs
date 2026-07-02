@@ -79,9 +79,12 @@ export default defineConfig({
         {
           label: "Services",
           items: [
-            { label: "CloudFormation", slug: "services/cloudformation" },
-            { label: "CloudFront", slug: "services/cloudfront" },
-            { label: "S3", slug: "services/s3" },
+            // service-sidebar:start
+                { label: "CloudFormation", slug: "services/cloudformation" },
+                { label: "CloudFront", slug: "services/cloudfront" },
+                { label: "Route53", slug: "services/route53" },
+                { label: "S3", slug: "services/s3" },
+              // service-sidebar:end
           ],
         },
       ],

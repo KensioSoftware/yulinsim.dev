@@ -1,9 +1,7 @@
 ---
 title: Simulated S3
-description: Use Yulin’s simulated S3 service for isolated tests, local development, and CI.
+description: Simulate S3 Buckets, Objects, and static website hosting.
 ---
-
-# Simulated S3
 
 Yulin includes a simulated S3 service for isolated tests, local development, and CI.
 
