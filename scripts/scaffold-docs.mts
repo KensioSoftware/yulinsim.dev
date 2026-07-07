@@ -66,12 +66,16 @@ Set YULIN_REPO=/absolute/path/to/yulin if needed.`,
     skipped: 0,
   };
 
-  const serviceDocs = await copyReadmesUnderDirectory({
+  await copyReadmesUnderDirectory({
     sourceRoot: join(sourceDocsRoot, "services"),
     targetRoot: join(targetDocsRoot, "services"),
     titlePrefix: "Simulated",
     result,
   });
+
+  const serviceDocs = await readServiceDocsUnderDirectory(
+    join(targetDocsRoot, "services"),
+  );
 
   await replaceMarkedBlockInFile(
     docsIndex,
@@ -106,15 +110,14 @@ async function copyReadmesUnderDirectory({
   targetRoot: string;
   titlePrefix: string;
   result: CopyResult;
-}): Promise<ServiceDoc[]> {
+}): Promise<void> {
   if (!existsSync(sourceRoot)) {
     console.warn(`Skipping missing docs directory: ${sourceRoot}`);
     result.skipped += 1;
-    return [];
+    return;
   }
 
   const entries = await readdir(sourceRoot, { withFileTypes: true });
-  const serviceDocs: ServiceDoc[] = [];
 
   for (const entry of entries) {
     if (!entry.isDirectory()) {
@@ -124,20 +127,14 @@ async function copyReadmesUnderDirectory({
     const sourceFile = join(sourceRoot, entry.name, "README.md");
     const targetFile = join(targetRoot, entry.name, "index.md");
 
-    const serviceDoc = await copyDocFile({
+    await copyDocFile({
       sourceFile,
       targetFile,
       fallbackTitle: `${titlePrefix} ${toTitleCase(entry.name)}`,
       slug: entry.name,
       result,
     });
-
-    if (serviceDoc !== undefined) {
-      serviceDocs.push(serviceDoc);
-    }
   }
-
-  return serviceDocs.sort((a, b) => a.title.localeCompare(b.title));
 }
 
 async function copyDocFile({
@@ -152,11 +149,11 @@ async function copyDocFile({
   fallbackTitle: string;
   slug: string;
   result: CopyResult;
-}): Promise<ServiceDoc | undefined> {
+}): Promise<void> {
   if (!existsSync(sourceFile)) {
     console.warn(`Skipping missing source doc: ${sourceFile}`);
     result.skipped += 1;
-    return undefined;
+    return;
   }
 
   const sourceText = await readFile(sourceFile, "utf8");
@@ -167,7 +164,6 @@ async function copyDocFile({
   const sourceFrontmatter = parseFrontmatterFields(sourceParts.frontmatter);
 
   let targetFrontmatter: string;
-  let targetFrontmatterFields: FrontmatterFields;
   let created = false;
 
   if (existsSync(targetFile)) {
@@ -175,12 +171,10 @@ async function copyDocFile({
     const targetParts = parseMarkdown(targetText);
     targetFrontmatter =
       targetParts.frontmatter ?? makeFrontmatter(sourceTitle ?? fallbackTitle);
-    targetFrontmatterFields = parseFrontmatterFields(targetFrontmatter);
   } else {
     targetFrontmatter = makeFrontmatter(
       sourceFrontmatter.title ?? sourceTitle ?? fallbackTitle,
     );
-    targetFrontmatterFields = parseFrontmatterFields(targetFrontmatter);
     created = true;
   }
 
@@ -196,20 +190,81 @@ async function copyDocFile({
     console.log(`Updated docs file: ${targetFile}`);
     result.updated += 1;
   }
+}
+
+async function readServiceDocsUnderDirectory(
+  servicesRoot: string,
+): Promise<ServiceDoc[]> {
+  if (!existsSync(servicesRoot)) {
+    return [];
+  }
+
+  const entries = await readdir(servicesRoot, { withFileTypes: true });
+  const serviceDocs: ServiceDoc[] = [];
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) {
+      continue;
+    }
+
+    const serviceDoc = await readServiceDoc({
+      servicesRoot,
+      slug: entry.name,
+    });
+
+    if (serviceDoc !== undefined) {
+      serviceDocs.push(serviceDoc);
+    }
+  }
+
+  return serviceDocs.sort((a, b) => a.title.localeCompare(b.title));
+}
+
+async function readServiceDoc({
+  servicesRoot,
+  slug,
+}: {
+  servicesRoot: string;
+  slug: string;
+}): Promise<ServiceDoc | undefined> {
+  const docFile = await findServiceDocIndexFile(join(servicesRoot, slug));
+
+  if (docFile === undefined) {
+    console.warn(`Skipping service without index.md or index.mdx: ${slug}`);
+    return undefined;
+  }
+
+  const text = await readFile(docFile, "utf8");
+  const parts = parseMarkdown(text);
+  const body = parts.body.trim();
+  const frontmatter = parseFrontmatterFields(parts.frontmatter);
+  const title = frontmatter.title ?? extractTitle(body) ?? toTitleCase(slug);
 
   return {
     slug,
-    title: stripSimulatedPrefix(
-      targetFrontmatterFields.title ??
-        sourceFrontmatter.title ??
-        sourceTitle ??
-        fallbackTitle,
-    ),
-    description:
-      targetFrontmatterFields.description ??
-      sourceFrontmatter.description ??
-      "",
+    title: stripSimulatedPrefix(title),
+    description: frontmatter.description ?? "",
   };
+}
+
+async function findServiceDocIndexFile(
+  serviceDir: string,
+): Promise<string | undefined> {
+  const entries = await readdir(serviceDir, { withFileTypes: true });
+  const indexFiles = entries
+    .filter((entry) => entry.isFile())
+    .map((entry) => entry.name)
+    .filter((name) => name === "index.md" || name === "index.mdx");
+
+  if (indexFiles.includes("index.md")) {
+    return join(serviceDir, "index.md");
+  }
+
+  if (indexFiles.includes("index.mdx")) {
+    return join(serviceDir, "index.mdx");
+  }
+
+  return undefined;
 }
 
 function parseMarkdown(text: string): MarkdownParts {
