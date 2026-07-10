@@ -11,18 +11,18 @@
     "fmt": "prettier --write ."
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.41.0",
-    "astro": "^7.0.2",
-    "sharp": "^0.34.5"
+    "@astrojs/starlight": "^0.41.3",
+    "astro": "^7.0.6",
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
-    "@kensio/yulin": "^0.23.0",
-    "aws-cdk": "^2.1128.1",
-    "aws-cdk-lib": "^2.260.0",
+    "@kensio/yulin": "^0.31.0",
+    "aws-cdk": "^2.1129.0",
+    "aws-cdk-lib": "^2.261.0",
     "constructs": "^10.6.0",
-    "prettier": "^3.8.4",
+    "prettier": "^3.9.4",
     "ts-node": "^10.9.2",
-    "tsx": "^4.22.4",
+    "tsx": "^4.22.5",
     "typescript": "^6.0.3"
   }
 }
