@@ -91,6 +91,7 @@ export default defineConfig({
                 { label: "Route53", slug: "services/route53" },
                 { label: "S3", slug: "services/s3" },
                 { label: "SQS", slug: "services/sqs" },
+                { label: "STS", slug: "services/sts" },
               // service-sidebar:end
           ],
         },
